@@ -1,0 +1,91 @@
+
+kernel void partialReduce(const int entries,
+			  const datafloat *u,
+			  const datafloat *newu,
+			  datafloat *red){
+
+  for(int blk=0;blk<(entries+BDIM-1)/BDIM;++blk;outer0){
+    
+    shared datafloat s_red[BDIM];
+
+    for(int tid=0;tid<BDIM;++tid;inner0){
+      s_red[tid] = 0;
+
+      int id = blk*BDIM+tid;
+      if(id < entries){
+	const datafloat diff = u[id] - newu[id];
+	s_red[tid] = diff*diff;
+      }
+    }
+    
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+    
+    if(BDIM>128){
+      for(int tid=0;tid<BDIM;++tid;inner0)
+      	if(tid<128) // manually unrolled reduction 
+	  s_red[tid] += s_red[tid+128];
+    }
+
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+
+    if(BDIM>64){
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<64)
+	  s_red[tid] += s_red[tid+64];
+    }
+
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+    
+    if(BDIM>32){
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<32)
+	  s_red[tid] += s_red[tid+32];
+    }
+    
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+
+    if(BDIM>16){  
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<16)
+	  s_red[tid] += s_red[tid+16];
+    }
+
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+
+    if(BDIM>8){
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<8)
+	  s_red[tid] += s_red[tid+8];
+    }
+    
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+
+    if(BDIM>4){
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<4)
+	  s_red[tid] += s_red[tid+4];
+    }
+      
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+
+    if(BDIM>2){  
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<2)
+	  s_red[tid] += s_red[tid+2];
+    }
+
+    barrier(localMemFence);  // barrier (make sure s_red is ready)
+    
+    if(BDIM>1){
+      for(int tid=0;tid<BDIM;++tid;inner0)
+	if(tid<1)		
+	  s_red[tid] += s_red[tid+1];
+    }
+
+    
+    // store result of this block reduction
+    for(int tid=0;tid<BDIM;++tid;inner0)
+      if(tid==0)
+	red[occaOuterId0] = s_red[tid];
+  }
+}

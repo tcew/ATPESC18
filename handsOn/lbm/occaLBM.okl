@@ -1,0 +1,135 @@
+// loop up 1D array index from 2D node coordinates
+int idx(int N, int n, int m){
+  return (n + (m*(N+2)));
+}
+
+// perform lattice streaming and collision steps
+kernel void lbmUpdate(const int N,                  // number of nodes in x
+		      const int M,                  // number of nodes in y
+		      const dfloat c,                // speed of sound
+		      const dfloat * restrict tau,           // relaxation rate
+		      const int    * restrict nodeType,      // (N+2) x (M+2) node types 
+		      const dfloat * restrict f,             // (N+2) x (M+2) x 9 fields before streaming and collisions
+		      dfloat * restrict fnew){               // (N+2) x (M+2) x 9 fields after streaming and collisions
+  
+  // loop over all non-halo nodes in lattice
+  for(int mb=0;mb<(M+2+TY-1)/TY;++mb;outer1){
+    for(int nb=0;nb<(N+2+TX-1)/TX;++nb;outer0){
+
+      for(int mt=0;mt<TY;++mt;inner1){
+	for(int nt=0;nt<TX;++nt;inner0){
+	  
+	  // number of nodes in whole array including halo
+	  const int Nall = (N+2)*(M+2);
+	  
+	  const int n = 1 + nt + nb*TX;
+	  const int m = 1 + mt + mb*TY;
+
+	  if(m<M+1 && n<=N+1){
+
+	    // physics paramaters
+	    dfloat tauinv = 1.f/tau[idx(N,n,m)];
+	    
+	    // discover type of node (WALL or FLUID)
+	    const int nodet = nodeType[idx(N,n,m)];
+	    dfloat fnm[NSPECIES];
+	    
+	    // OUTFLOW
+	    if(n==N+1){
+	      fnm[0] = f[idx(N,n,  m)   + 0*Nall]; // stationary 
+	      fnm[1] = f[idx(N,n-1,m)   + 1*Nall]; // E bound from W
+	      fnm[2] = f[idx(N,n,m-1)   + 2*Nall]; // N bound from S
+	      fnm[3] = f[idx(N,n,m)     + 3*Nall]; // W bound from E
+	      fnm[4] = f[idx(N,n,m+1)   + 4*Nall]; // S bound from N
+	      fnm[5] = f[idx(N,n-1,m-1) + 5*Nall]; // NE bound from SW
+	      fnm[6] = f[idx(N,n,m-1)   + 6*Nall]; // NW bound from SE
+	      fnm[7] = f[idx(N,n,m+1)   + 7*Nall]; // SW bound from NE
+	      fnm[8] = f[idx(N,n-1,m+1) + 8*Nall]; // SE bound from NW      
+	    }
+	    else if(nodet == FLUID){
+	      fnm[0] = f[idx(N,n,  m)   + 0*Nall]; // stationary 
+	      fnm[1] = f[idx(N,n-1,m)   + 1*Nall]; // E bound from W
+	      fnm[2] = f[idx(N,n,m-1)   + 2*Nall]; // N bound from S
+	      fnm[3] = f[idx(N,n+1,m)   + 3*Nall]; // W bound from E
+	      fnm[4] = f[idx(N,n,m+1)   + 4*Nall]; // S bound from N
+	      fnm[5] = f[idx(N,n-1,m-1) + 5*Nall]; // NE bound from SW
+	      fnm[6] = f[idx(N,n+1,m-1) + 6*Nall]; // NW bound from SE
+	      fnm[7] = f[idx(N,n+1,m+1) + 7*Nall]; // SW bound from NE
+	      fnm[8] = f[idx(N,n-1,m+1) + 8*Nall]; // SE bound from NW
+	    }
+	    else{
+	      // WALL reflects particles
+	      fnm[0] = f[idx(N,n,m) + 0*Nall]; // stationary 
+	      fnm[1] = f[idx(N,n,m) + 3*Nall]; // E bound from W
+	      fnm[2] = f[idx(N,n,m) + 4*Nall]; // N bound from S
+	      fnm[3] = f[idx(N,n,m) + 1*Nall]; // W bound from E
+	      fnm[4] = f[idx(N,n,m) + 2*Nall]; // S bound from N
+	      fnm[5] = f[idx(N,n,m) + 7*Nall]; // NE bound from SW
+	      fnm[6] = f[idx(N,n,m) + 8*Nall]; // NW bound from SE
+	      fnm[7] = f[idx(N,n,m) + 5*Nall]; // SW bound from NE
+	      fnm[8] = f[idx(N,n,m) + 6*Nall]; // SE bound from NW
+	    }
+    
+	    // macroscopic density
+	    const dfloat rho = fnm[0]+fnm[1]+fnm[2]+fnm[3]+fnm[4]+fnm[5]+fnm[6]+fnm[7]+fnm[8];
+    
+	    // macroscopic momentum
+	    const dfloat Ux = (fnm[1] -fnm[3] +fnm[5] -fnm[6] -fnm[7] +fnm[8])*c/rho;
+	    const dfloat Uy = (fnm[2] -fnm[4] +fnm[5] +fnm[6] -fnm[7] -fnm[8])*c/rho;
+
+	    // compute equilibrium distribution
+	    dfloat feq[NSPECIES];
+
+	    const dfloat U2 = Ux*Ux+Uy*Uy;			
+	    const dfloat v0 = 0;				
+	    const dfloat v1 = +Ux/c;				
+	    const dfloat v2 = +Uy/c;				
+	    const dfloat v3 = -Ux/c;				
+	    const dfloat v4 = -Uy/c;				
+	    const dfloat v5 =  (+Ux+Uy)/c;			
+	    const dfloat v6 =  (-Ux+Uy)/c;			
+	    const dfloat v7 =  (-Ux-Uy)/c;			
+	    const dfloat v8 =  (+Ux-Uy)/c;			
+	  	    								
+	    feq[0] = rho*w0*(1.f + 3.f*v0 + 4.5f*v0*v0 -1.5f*U2/(c*c)); 
+	    feq[1] = rho*w1*(1.f + 3.f*v1 + 4.5f*v1*v1 -1.5f*U2/(c*c)); 
+	    feq[2] = rho*w2*(1.f + 3.f*v2 + 4.5f*v2*v2 -1.5f*U2/(c*c)); 
+	    feq[3] = rho*w3*(1.f + 3.f*v3 + 4.5f*v3*v3 -1.5f*U2/(c*c)); 
+	    feq[4] = rho*w4*(1.f + 3.f*v4 + 4.5f*v4*v4 -1.5f*U2/(c*c)); 
+	    feq[5] = rho*w5*(1.f + 3.f*v5 + 4.5f*v5*v5 -1.5f*U2/(c*c)); 
+	    feq[6] = rho*w6*(1.f + 3.f*v6 + 4.5f*v6*v6 -1.5f*U2/(c*c)); 
+	    feq[7] = rho*w7*(1.f + 3.f*v7 + 4.5f*v7*v7 -1.5f*U2/(c*c)); 
+	    feq[8] = rho*w8*(1.f + 3.f*v8 + 4.5f*v8*v8 -1.5f*U2/(c*c)); 
+	    
+	    const dfloat R = g0*fnm[0] + g1*fnm[1] + g2*fnm[2]+ g3*fnm[3] + g4*fnm[4] + g5*fnm[5] + g6*fnm[6] + g7*fnm[7] + g8*fnm[8];
+        
+	    // post collision densities
+	    fnm[0] = fnm[0] -tauinv*(fnm[0]-feq[0]) - (1.f-tauinv)*w0*g0*R*0.25f;
+	    fnm[1] = fnm[1] -tauinv*(fnm[1]-feq[1]) - (1.f-tauinv)*w1*g1*R*0.25f;
+	    fnm[2] = fnm[2] -tauinv*(fnm[2]-feq[2]) - (1.f-tauinv)*w2*g2*R*0.25f;
+	    fnm[3] = fnm[3] -tauinv*(fnm[3]-feq[3]) - (1.f-tauinv)*w3*g3*R*0.25f;
+	    fnm[4] = fnm[4] -tauinv*(fnm[4]-feq[4]) - (1.f-tauinv)*w4*g4*R*0.25f;
+	    fnm[5] = fnm[5] -tauinv*(fnm[5]-feq[5]) - (1.f-tauinv)*w5*g5*R*0.25f;
+	    fnm[6] = fnm[6] -tauinv*(fnm[6]-feq[6]) - (1.f-tauinv)*w6*g6*R*0.25f;
+	    fnm[7] = fnm[7] -tauinv*(fnm[7]-feq[7]) - (1.f-tauinv)*w7*g7*R*0.25f;
+	    fnm[8] = fnm[8] -tauinv*(fnm[8]-feq[8]) - (1.f-tauinv)*w8*g8*R*0.25f;
+    
+	    // store new densities
+	    const int base = idx(N,n,m);
+	    //	    printf("fnm=%g,%g,%g,%g,%g,%g,%g,%g,base=%d,Nall=%d\n", fnm[0], fnm[1], fnm[2], fnm[3], fnm[4], fnm[5], fnm[6], fnm[7], fnm[8], base, Nall);
+	    fnew[base+0*Nall] = fnm[0];
+	    fnew[base+1*Nall] = fnm[1];
+	    fnew[base+2*Nall] = fnm[2];
+	    fnew[base+3*Nall] = fnm[3];
+	    fnew[base+4*Nall] = fnm[4];
+	    fnew[base+5*Nall] = fnm[5];
+	    fnew[base+6*Nall] = fnm[6];
+	    fnew[base+7*Nall] = fnm[7];
+	    fnew[base+8*Nall] = fnm[8];
+	  }
+	}
+      }
+    }
+  }
+}
+

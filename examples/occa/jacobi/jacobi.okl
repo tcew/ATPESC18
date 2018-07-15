@@ -1,0 +1,45 @@
+
+/* 
+
+   Poisson problem:               diff(u, x, 2) + diff(u, y, 2) = f
+
+   Coordinate transform:          x -> -1 + delta*i, 
+                                  y -> -1 + delta*j
+
+   2nd order finite difference:   4*u(j,i) - u(j-1,i) - u(j+1,i) - u(j,i-1) - u(j,i+1) = -delta*delta*f(j,i) 
+
+   define: rhs(j,i) = -delta*delta*f(j,i)
+
+   Jacobi iteration: newu(j,i) = 0.25*(u(j-1,i) + u(j+1,i) + u(j,i-1) + u(j,i+1) + rhs(j,i))
+
+   To run with a 402x402 grid until the solution changes less than 1e-7 per iteration (in l2): ./main 400 1e-7  
+
+*/
+
+kernel void jacobi(const int N,
+		   const datafloat *rhs,
+		   const datafloat *u,
+		   datafloat *newu){
+
+  for(int start1=0; start1<N; start1+=BY; outer1){
+    for(int start0=0; start0<N; start0+=BX; outer0){
+      
+      for(int j=start1; j<start1+BY; ++j; inner1){
+	for(int i=start0; i<start0+BX; ++i; inner0){
+
+	  if((i < N) && (j < N)){
+	    
+	    // Get linear index into (N+2)x(N+2) grid
+	    const int id = (j + 1)*(N + 2) + (i + 1);
+	    
+	    newu[id] = 0.25f*(rhs[id]
+			      + u[id - (N+2)]
+			      + u[id + (N+2)]
+			      + u[id - 1]
+			      + u[id + 1]);
+	  }
+	}
+      }
+    }
+  }
+}

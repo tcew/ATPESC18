@@ -1,0 +1,12 @@
+
+kernel void simple(int N, float *x){
+
+  //  for(int start=0;start<N;start+=T;outer0){
+  //    for(int id=start;id<start+T;++id;inner0){
+  for(int id=0;id<N;++id;tile(T)){
+      
+      if(id<N)
+	x[id] = id;
+    }
+  }
+}

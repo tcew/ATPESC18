@@ -1,0 +1,32 @@
+#define BORN 1
+#define DIES 0
+
+#define id(r,c) ((r)*Ncolumns+(c))
+
+/* EX02: convert this to an OCCA kernel */
+/* EX02a: annotate to indicate a kernel */
+void update(int Nrows, int Ncolumns, int *board, int *newboard){
+
+  /* EX02b: add OCCA outer loop identifiers */
+  for(int ro=1;ro<Nrows-1;ro+=16){
+    for(int co=1;co<Nrows-1;co+=16){
+
+      /* EX02c: add OCCA inner loop identifiers */
+      for(int r=ro;r<ro+16;++r){
+	for(int c=co;c<co+16;++c){
+  
+	  if(r<Nrows-1 && c<Ncolumns-1){
+	    /* this does not change */
+	    int s = 
+	      board[id(r-1,c-1)]+board[id(r-1,c-0)]+board[id(r-1,c+1)]+
+	      board[id(r+0,c-1)]+                   board[id(r+0,c+1)]+
+	      board[id(r+1,c-1)]+board[id(r+1,c-0)]+board[id(r+1,c+1)];
+	    
+	    newboard[id(r,c)]
+	      = (s<2)*DIES + (s==2)*board[id(r,c)] + (s==3)*BORN + (s>3)*DIES;
+	  }
+	}
+      }
+    }
+  }
+}

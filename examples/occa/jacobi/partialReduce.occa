@@ -1,0 +1,94 @@
+
+occaKernel void partialReduce(occaKernelInfoArg, 
+			      const int occaVariable entries,
+			      occaPointer const datafloat *u,
+			      occaPointer const datafloat *newu,
+			      occaPointer datafloat *red){
+
+  occaOuterFor0{
+    
+    occaShared datafloat s_red[BDIM];
+
+#define id  occaGlobalId0
+#define tid occaInnerId0
+
+    occaInnerFor0{
+      s_red[tid] = 0;
+      
+      if(id < entries){
+	const datafloat diff = u[id] - newu[id];
+	s_red[tid] = diff*diff;
+      }
+    }
+    
+    occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    
+    if(BDIM>128){
+      occaInnerFor0
+	if(tid<128) // manually unrolled reduction 
+	  s_red[tid] += s_red[tid+128];
+      
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+
+    if(BDIM>64){
+      occaInnerFor0
+	if(tid<64)
+	  s_red[tid] += s_red[tid+64];
+      
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+    
+    if(BDIM>32){
+      occaInnerFor0
+	if(tid<32)
+	  s_red[tid] += s_red[tid+32];
+      
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+
+    if(BDIM>16){  
+      occaInnerFor0
+	if(tid<16)
+	  s_red[tid] += s_red[tid+16];
+    
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+
+    if(BDIM>8){
+      occaInnerFor0
+	if(tid<8)
+	  s_red[tid] += s_red[tid+8];
+
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+
+    if(BDIM>4){
+      occaInnerFor0
+	if(tid<4)
+	  s_red[tid] += s_red[tid+4];
+      
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+
+    if(BDIM>2){  
+      occaInnerFor0
+	if(tid<2)
+	  s_red[tid] += s_red[tid+2];
+
+      occaBarrier(occaLocalMemFence);  // barrier (make sure s_red is ready)
+    }
+    
+    if(BDIM>1){
+      occaInnerFor0	
+	if(tid<1)		
+	  s_red[tid] += s_red[tid+1];
+    }
+
+    
+    // store result of this block reduction
+    occaInnerFor0	
+      if(tid==0)
+	red[occaOuterId0] = s_red[tid];
+  }
+}

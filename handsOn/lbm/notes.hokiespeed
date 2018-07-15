@@ -1,0 +1,6 @@
+
+module purge
+module load gcc
+module load yasm x264 fdk-aac lame ffmpeg
+
+ffmpeg -start_number 1 -r 24 -i bah%06d.png -c:v mpeg4 carR.mp4
