@@ -5,7 +5,7 @@ Instructions for Accelerator Presentation
 
 Slides: www.math.vt.edu/people/tcew/ATPESC18 
 
-OCCA repo (version 0.2 branch): git clone https://github.com/libocca/occa -b 0.2
+OCCA repo (version 0.2 branch): `git clone https://github.com/libocca/occa -b 0.2`
 
 Paranumal website: http://www.paranumal.com
 
