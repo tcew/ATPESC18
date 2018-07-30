@@ -44,7 +44,7 @@ Follow these instructions to get access to a cooley GPU node and configure for C
 `make`  
 
 #### C. submit job request
-`qsub -A ATPESC18 -I -n 1 -t 120 -q training`  
+`qsub -A ATPESC2018 -I -n 1 -t 120 -q training`  
 
 #### D. change path/name of your png file to your image
 `./cudaLBM ./images/fsm.png 400`  
@@ -61,7 +61,7 @@ Follow these instructions to get access to a cooley GPU node and configure for C
 `git clone https://github.com/tcew/ATPESC18`  
 
 ### C. submit job request
-`qsub -A ATPESC18 -I -n 1 -t 120 -q training`  
+`qsub -A ATPESC2018 -I -n 1 -t 120 -q training`  
 
 ### D. build OCCA
 `cd occa`  
