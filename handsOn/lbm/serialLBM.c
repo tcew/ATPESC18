@@ -384,7 +384,7 @@ void lbmRun(int N,
 int main(int argc, char **argv){
 
   if(argc!=3){
-    printf("usage: ./lbm foo.png threshold\n");
+    printf("usage: ./serialLBM foo.png threshold\n");
     exit(-1);
   }
 

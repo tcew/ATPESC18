@@ -385,7 +385,7 @@ void lbmUpdate(const int N,                  // number of nodes in x
 int main(int argc, char **argv){
 
   if(argc!=3){
-    printf("usage: ./lbm foo.png threshold\n");
+    printf("usage: ./occaLBM foo.png threshold\n");
     exit(-1);
   }
 

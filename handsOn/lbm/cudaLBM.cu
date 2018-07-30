@@ -379,7 +379,7 @@ void lbmInitialConditions(dfloat c, int N, int M, int *nodeType, dfloat *f){
 int main(int argc, char **argv){
 
   if(argc!=3){
-    printf("usage: ./lbm foo.png threshold\n");
+    printf("usage: ./cudaLBM foo.png threshold\n");
     exit(-1);
   }
 
