@@ -11,6 +11,8 @@ Paranumal website: http://www.paranumal.com
 
 Paranumal blog including tips on GPU performance: https://www.paranumal.com/blog 
 
+Ray Loy's on-boarding ALCF slides: https://extremecomputingtraining.anl.gov/sessions/presentation-quick-start-on-atpesc-resources/  
+
 ## Examples: 
 
 To access the demos from the GPU programming lecture:
