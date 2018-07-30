@@ -1,4 +1,4 @@
-## ATPESC18
+# ATPESC18
 GPU programming module for Argonne Training Program in Extreme Scale Computing 2018
 
 Instructions for Accelerator Presentation
@@ -7,9 +7,17 @@ Slides: www.math.vt.edu/people/tcew/ATPESC18
 
 OCCA repo (version 0.2 branch): git clone https://github.com/libocca/occa -b 0.2
 
-Examples: git clone https://github.com/tcew/ATPESC18
+Paranumal website: http://www.paranumal.com
 
-Flow animation hands-on:
+Paranumal blog including tips on GPU performance: https://www.paranumal.com/blog 
+
+## Examples: 
+
+To access the demos from the GPU programming lecture:
+
+`git clone https://github.com/tcew/ATPESC18`  
+
+## Flow animation hands-on:
 
 Follow these instructions to get access to a cooley GPU node and configure for CUDA
 
