@@ -56,4 +56,7 @@ int main(int argc,char **argv){
     
   // Print out result
   for(int n=0;n<N;++n) printf("h_c[%d] = %f\n", n, h_c[n]);
+
+  cudaFree(d_a); cudaFree(d_b); cudaFree(d_c);
+  free(h_a); free(h_b); free(h_c);
 }
