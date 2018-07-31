@@ -19,6 +19,8 @@ To access the demos from the GPU programming lecture:
 
 `git clone https://github.com/tcew/ATPESC18`  
 
+Note: `You may need to use ssh-keygen on cooley and update the github ssh public keys associated with the ssh public key from your cooley account)'  
+
 ## Flow animation hands-on:
 
 Follow these instructions to get access to a cooley GPU node and configure for CUDA
