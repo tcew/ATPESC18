@@ -1,0 +1,13 @@
+// OKL kernel code
+kernel void addVectorsKernel(int N, double *a, double *b, double *c){
+
+#define T 100
+  
+  for(int block=0;block<(N+T-1)/T;++block;outer0){
+    for(int t=0;t<T;++t;inner0){
+      int n = t + block*T;
+      if(n<N)
+	c[n] = a[n] + b[n];
+    }
+  }
+}
